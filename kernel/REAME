@@ -1,0 +1,21 @@
+En este directorio se encuentran los parches y .config
+necesarios para crear un kernel para Metaditros.
+
+Hay 2 directorios, para los dos últimos kernel de la rama 
+2.4[1] del kernel: 2.4.24 y 2.4.25. En cada uno de ellos está el
+config necesario para compilarlos y los parches a aplicar.
+
+Estos kernels están pensados para que usen los módulos
+pcmcia del proyecto pcmcia-cs, en vez de los del kernel. Así
+que será necesario descargarse los fuentes de dichos módulos[2].
+
+Dentro del los parches a aplicar está el de squashfs, que hay que
+descargarlo[3] y aplicarle el parche situado en esta directorio y
+llamado "squashfs1.3r3-meta.patch". Ésto es para solucionar el problema
+que causaba con el número de GIDs en las imágenes de distribuciones.
+
+
+[1] ftp://fpt.kernel.org/pub/linux/kernel/v2.4/linux-2.4.25.tar.bz2
+    ftp://fpt.kernel.org/pub/linux/kernel/v2.4/linux-2.4.24.tar.bz2
+[2] http://heanet.dl.sourceforge.net/sourceforge/pcmcia-cs/pcmcia-cs-3.2.7.tar.gz
+[3] http://heanet.dl.sourceforge.net/sourceforge/squashfs/squashfs1.3r3.tar.gz

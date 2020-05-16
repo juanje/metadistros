@@ -1,0 +1,14 @@
+q.conf:
+	Contiene variables globales, que pueden ser definidas tanto antes, como en 
+tiempo de ejecución. Estas variables, corresponden a preguntas que se haran o no
+al usuario, duerante el funcionamiento del Cargador. Basicamente definen si se
+haran o no estas preguntas.
+
+var.conf:
+	Contiene variables globales, que pueden ser definidas tanto antes, como en 
+tiempo de ejecución. Estas son variables globales, que sirven a los scripts de 
+arranque e instalación, para configurar ciertos parámetros.
+
+lang.conf:
+	Contiene las variables globales de los idiomas: locales, mapas de teclado, 
+etc.

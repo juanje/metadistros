@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<directory>
+<file name="."/>
+<file name="home" icon_position="62,49"/>
+<file name="trash" icon_position="72,160"/>
+<file name="mount_cdrom0" icon_position="220,42" custom_icon="file:///usr/share/icons/Industrial/48x48/devices/gnome-dev-cdrom.png"/>
+<file name="mount_cdrom1" icon_position="220,282" custom_icon="file:///usr/share/icons/Industrial/48x48/devices/gnome-dev-cdrom.png"/>
+<file name="mount_a%3A" icon_position="220,162"/>
+<file name="mount_mnt_usb1" icon_position="922,603"/>
+<file name="mount_mnt_usb0" icon_position="844,603"/>
+</directory>

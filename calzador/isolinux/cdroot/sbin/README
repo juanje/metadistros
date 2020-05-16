@@ -1,0 +1,17 @@
+cdroot/sbin/
+|-- README
+|-- busybox
+|-- dialog
+|-- eject
+|-- hw-detect.sh
+|-- init
+|-- install.sh
+|-- live.sh
+|-- mdetect
+|-- mkxf86config.sh
+|-- pump
+`-- x-detect.sh
+
+0 directories, 12 files
+
+HWSetup.c : -> Falta modificar el Makefile para que pille gettext y ponerle una opcion para que no detecte las X.

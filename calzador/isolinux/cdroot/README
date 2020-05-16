@@ -1,0 +1,24 @@
+cdroot/
+|-- README
+|-- locale
+|   `-- es
+|       `-- LC_MESSAGES
+|-- sbin
+|   |-- README
+|   |-- busybox
+|   |-- dialog
+|   |-- eject
+|   |-- hw-detect.sh
+|   |-- init
+|   |-- install.sh
+|   |-- live.sh
+|   |-- mdetect
+|   |-- mkxf86config.sh
+|   |-- pump
+|   `-- x-detect.sh
+`-- templates
+    |-- README
+    |-- XF86Config-4.in
+    `-- XF86Config.in
+
+5 directories, 16 files

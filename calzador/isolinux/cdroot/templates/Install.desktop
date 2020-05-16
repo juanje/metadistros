@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=su -c "/isolinux/cdroot/sbin/install-x.sh 2> /dev/null"
+TryExec=
+Icon=/tmp/install.png
+X-GNOME-DocPath=
+Terminal=true
+Name[es_ES]=Instalar en el Disco Duro
+GenericName[es_ES]=
+Comment[es_ES]=

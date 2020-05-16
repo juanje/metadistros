@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<directory><file name="My%20Computer"
+icon_position="76,103"/><file name="gimp.desktop"
+icon_position="526,115" screen="0"/><file name="gthumb.desktop"
+icon_position="663,115" screen="0"/><file name="e-mail.desktop"
+icon_position="526,14" screen="0"/><file name="textdoc.desktop"
+icon_position="535,208" screen="0"
+custom_icon="file:///usr/share/pixmaps/redhat-word-processor.png"/><file
+name="totem.desktop" icon_position="527,117" screen="0"
+custom_icon="file:///usr/share/icons/gnome/48x48/apps/gnome-multimedia.png"/><file
+name="xmms.desktop" icon_position="663,203" screen="0"
+custom_icon="file:///usr/share/pixmaps/gnome-audio2.png"/><file
+name="Web%20de%20Metadistros.desktop"
+icon_position="83,396"/><file
+name="Web%20de%20Gnome%20Hispano.desktop" icon_position="45,576"
+icon_scale="2.62"/><file name="web-browser.desktop"
+icon_position="663,14" screen="0"
+custom_icon="file:///usr/share/pixmaps/redhat-web-browser.png"/><file
+name="xchat.desktop" icon_position="537,297" screen="0"/><file
+name="gaim.desktop" icon_position="666,293" screen="0"/><file
+name="Papelera" icon_position="76,180"/><file
+name="Web%20de%20la%20OSL.desktop" icon_position="83,478"
+custom_icon="file:///usr/share/pixmaps/metadistros/logo-osl.png"/><file
+name="Install.desktop" icon_scale="1.52" screen="0" icon_position="322,425"/></directory>

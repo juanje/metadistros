@@ -1,0 +1,424 @@
+#!/static/sh
+#
+# META General Startup Script
+# (C) Klaus Knopper <META@knopper.net>
+#
+#
+# Spanish translation by Sergio González <sergio.gonzalez@hispalinux.es>
+# and Luis Llorente <luis.llorente@hispalinux.es>
+#
+# This script needs some of the builtin ash commands (if, test, ...)
+# mount/umount, insmod/rmmod are also a builtin in ash-META.
+#
+
+# hardcoded configurable options
+# Default maximum size of dynamic ramdisk in kilobytes
+RAMSIZE=1000000
+# End of options
+
+# Don't allow interrupt signals
+trap "" 1 2 3 15
+
+# "Safe" SCSI modules in the right order for autoprobe
+# Warning: The sym53c8xx.o and g_NCR* cause a kernel Oops if no such adapter
+# is present.
+#
+# NB: It looks like that ncr53c8xx.o is more stable than 53c7,8xx.o for
+# a ncr53c810 controller (at least on my installation box it's more
+# immune to SCSI timeouts)
+# Removed 53c7,8xx -> crashes if no device attached.
+# Removed AM53C974 -> crashes tmscsim if adapter found
+# Added initio.o on request (untested)
+SCSI_MODULES="aic7xxx.o aic7xxx_old.o BusLogic.o \
+ncr53c8xx.o NCR53c406a.o \
+initio.o \
+advansys.o aha1740.o aha1542.o aha152x.o \
+atp870u.o dtc.o eata.o fdomain.o gdth.o \
+megaraid.o pas16.o pci2220i.o pci2000.o psi240i.o \
+qlogicfas.o qlogicfc.o qlogicisp.o \
+seagate.o t128.o tmscsim.o u14-34f.o ultrastor.o wd7000.o \
+a100u2w.o 3w-xxxx.o"
+
+# Misc functions
+
+mountit(){
+# Usage: mountit src dst "options"
+# Uses builtin mount of ash.META
+# Builin filesystems
+BUILTIN_FS="iso9660 ext2 vfat"
+for fs in $BUILTIN_FS; do
+test -b $1 && mount -t $fs $3 $1 $2 >/dev/null 2>&1 && return 0
+done
+return 1
+}
+
+FOUND_SCSI=""
+FOUND_META=""
+
+# Clean input/output
+exec >/dev/console </dev/console 2>&1
+
+# Reset fb color mode
+RESET="]R"
+# ANSI COLORS
+# Erase to end of line
+CRE="[K"
+# Clear and reset Screen
+CLEAR="c"
+# Normal color
+NORMAL="[0;39m"
+# RED: Failure or error message
+RED="[1;31m"
+# GREEN: Success message
+GREEN="[1;32m"
+# YELLOW: Descriptions
+YELLOW="[1;33m"
+# BLUE: System mesages
+BLUE="[1;34m"
+# MAGENTA: Found devices or drivers
+MAGENTA="[1;35m"
+# CYAN: Questions
+CYAN="[1;36m"
+# BOLD WHITE: Hint
+WHITE="[1;37m"
+
+# We only need the builtin commands and /static at this point
+PATH=/static
+export PATH
+
+umask 022
+
+# Mount /proc and /dev/pts
+mount -t proc none /proc
+mount -t devpts none /dev/pts
+
+# Check for bootsplash
+ON=""
+SPLASH=""
+ON=$(grep -c on /proc/splash)
+if [ "$ON" = 1 ]; then
+	SPLASH="Y"
+fi
+
+# Read boot command line with builtin cat command (shell read function fails in Kernel 2.4.19-rc1)
+CMDLINE="$(cat /proc/cmdline)"
+
+LANGUAGE="$(echo $lang)"
+[ -n "$LANGUAGE" ] || LANGUAGE="es"
+
+# Clear screen with colormode reset
+echo "$CLEAR$RESET"
+# echo "$CLEAR"
+# Just go to the top of the screen
+#echo -n "^[[H^[[J"
+echo ""
+echo ""
+echo ""
+
+#progress: tramo 0
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 20 21 FCD123 -d /dev/fb0
+fi
+
+# Does the user want to skip scsi detection?
+NOSCSI=""
+case "$CMDLINE" in *noscsi*) NOSCSI="yes"; ;; esac
+
+# Disable kernel messages while probing modules in autodetect mode
+echo "0" > /proc/sys/kernel/printk
+
+# All interactively requested modules should be loaded now.
+# Try to load the given modules (full path or current directory)
+loadmodules(){
+TYPE="$1"; shift
+for i in "$@"; do
+if test -f /modules/scsi/$i && insmod -f /modules/scsi/$i >/dev/null 2>&1
+then
+case "$TYPE" in scsi|SCSI) FOUND_SCSI="yes"; ;; esac
+fi
+done
+}
+
+															     
+# these are the autoprobe-safe modules
+MODULES="$SCSI_MODULES"
+                                                                                                                             
+test -z "$NOSCSI" && test -n "$MODULES" && loadmodules SCSI $MODULES
+# End of SCSI check
+loadmodules SCSI $MODULES
+															     
+# Check for ide-scsi supported CD-Roms et al.
+test -f /proc/scsi/scsi && FOUND_SCSI="yes"
+
+# Disable kernel messages again
+echo "0" > /proc/sys/kernel/printk
+
+# Now that the right SCSI driver is (hopefully) loaded, try to find CDROM
+DEVICES="/dev/hd?"
+test -n "$FOUND_SCSI" && DEVICES="/dev/scd? /dev/scd?? $DEVICES"
+# New: Also try parallel port CD-Roms [for Mike].
+DEVICES="$DEVICES /dev/pcd?"
+# New: also check HD partitions for a META/META image
+test -n "$FOUND_SCSI" && DEVICES="$DEVICES /dev/sd?[1-9] /dev/sd?[1-9][0-9]"
+DEVICES="$DEVICES /dev/hd?[1-9] /dev/hd?[1-9][0-9]"
+for i in $DEVICES
+do
+
+if mountit $i /cdrom "-o ro" >/dev/null 2>&1
+then
+	if test -d /cdrom/META
+	then
+		FOUND_META="$i"
+		break
+	fi
+	umount /cdrom
+fi
+done
+
+
+#progress: tramo 0
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 50 21 FCD123 -d /dev/fb0
+fi
+
+# Harddisk-installed script part version has been removed
+# (META can be booted directly from HD now).
+insmod -f /modules/loop.o >/dev/null 2>&1
+insmod -f /modules/squashfs.o >/dev/null 2>&1
+
+if test -n "$FOUND_META" -a -f /cdrom/META/META.squashfs; then
+  echo -n "Con Squashfs"  >> /tmp/linuxrc.log 2>&1
+  mount -t squashfs -o loop /cdrom/META/META.squashfs /META -o ro || FOUND_META=""
+  
+elif test -n "$FOUND_META" -a -f /cdrom/META/META; then
+  echo "Sin Cloop" >> /tmp/linuxrc.log 2>&1
+  mount -t iso9660 -o loop /cdrom/META/META /META -o ro || FOUND_META=""
+  
+elif test -n "$FOUND_META" -a -f /cdrom/META/META.cloop; then
+  echo "Con Cloop" >> /tmp/linuxrc.log 2>&1
+  CVERSION=$(head -2 /cdrom/META/META.cloop | grep "^#V")
+  if [ "$CVERSION" = "#V1.0 Format" ]; then 
+	CLOOP="cloop.o"
+  elif [ "$CVERSION" = "#V2.0 Format" ]; then
+    CLOOP="cloop2.o"
+  else
+	echo "Version de Cloop no valida" >> /tmp/linuxrc.log 2>&1 
+	CLOOP="cloop.o"
+  fi
+  insmod -f /modules/${CLOOP} file=/cdrom/META/META.cloop >> /tmp/linuxrc.log 2>&1
+  mountit /dev/cloop /META "-o ro" || FOUND_META=""
+fi
+
+
+#progress: tramo 0
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 80 21 FCD123 -d /dev/fb0
+fi
+
+# Final test if everything succeeded.
+if test -n "$FOUND_META"
+then
+echo
+echo "${WHITE}Su sistema se esta configurando${NORMAL}"
+echo "${WHITE}Sea paciente y vera en breves momentos su distribucion de Linux en CD${NORMAL}"
+# copy library cache
+cat /META/etc/ld.so.cache > /etc/ld.so.cache
+echo ""
+
+# Enable kernel messages
+echo "6" > /proc/sys/kernel/printk
+
+#progress: Primer tramo
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 100 21 FCD123 -d /dev/fb0
+fi
+
+# Debian weirdness
+/bin/cp -a /META/etc/alternatives /etc/ 2>/dev/null
+
+# From here, we should have all essential commands available.
+hash -r
+
+# New in Kernel 2.4.x: tempfs with variable ramdisk size.
+# We check for available memory anyways and limit the ramdisks
+# to a reasonable size.
+TOTALMEM="$(cat /proc/meminfo | grep ^Mem: | tr -s "  " " " | cut -d " " -f 4)"
+
+
+# Now we need to use a little intuition for finding a ramdisk size
+# that keeps us from running out of space, but still doesn't crash the
+# machine due to lack of Ram
+
+# Minimum size of additional ram partitions
+MINSIZE=2000
+# At least this much memory minus 30% should remain when home and var are full.
+MINLEFT=16000
+# Maximum ramdisk size
+MAXSIZE="$(($TOTALMEM - $MINLEFT))"
+# Default ramdisk size for ramdisk
+RAMSIZE="$(($TOTALMEM / 5))"
+
+# Check for sufficient memory to mount extra ramdisk for /home + /var
+if [ -n "$TOTALMEM" -a "$TOTALMEM" -gt "$MINLEFT" ]; then
+test -z "$RAMSIZE" && RAMSIZE=1000000
+mkdir -p /ramdisk
+# tmpfs/varsize version, can use swap
+RAMSIZE=$(($RAMSIZE * 4))
+
+# We need /bin/mount here for the -o size= option
+/bin/mount -t tmpfs -o "size=${RAMSIZE}k" /dev/shm /ramdisk && mkdir -p /ramdisk/home /ramdisk/var /ramdisk/etc /ramdisk/modules && ln -s /ramdisk/home /ramdisk/var /
+
+else
+mkdir -p /home /var
+fi
+
+
+# ETC
+cp -af /etc/* /ramdisk/etc/ && rm -fr /etc && ln -s /ramdisk/etc / >> /tmp/linuxrc.log 2>&1
+
+# LIB
+rm -fr /lib && ln -s /META/lib /  >> /tmp/linuxrc.log 2>&1
+
+# TMP
+mv /tmp /ramdisk/ && ln -s /ramdisk/tmp / 
+ls /ramdisk >> /tmp/linuxrc.log
+
+#progress: Primer tramo
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 120 21 FCD123 -d /dev/fb0
+fi
+
+# Mount modules
+mount -o ro -t squashfs -o loop /cdrom/META/modules.squashfs /ramdisk/modules >> /tmp/linuxrc.log 2>&1
+mount -o bind /ramdisk/modules /lib/modules/  >> /tmp/linuxrc.log 2>&1
+
+# Clean up /
+rm -rf /modules /static
+
+# Set paths
+PATH="/cdrom/isolinux/cdroot/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:."
+export PATH
+
+
+# Create common WRITABLE (empty) dirs
+mkdir -p /var/run /var/backups /var/cache/apache /var/local /var/lock/news \
+         /var/nis /var/preserve /var/state/misc /var/tmp /var/lib \
+	 /var/spool/cups/tmp /var/log/gdm \
+         /mnt/test \
+         /etc/sysconfig /etc/X11 /etc/cups\
+	 /var/lib/apt/lists/ /var/lib/dpkg/ /etc/init.d 2> /dev/null
+cp -a /META/root/ / 2> /dev/null
+# Create empty utmp and wtmp
+:> /var/run/utmp
+:> /var/run/wtmp
+# CUPS wants writable files. :-/
+cp -a /META/etc/cups/*.conf /etc/cups/ 2>/dev/null
+# All files in here should be size zero after META.clean was run
+cp -a /META/var/local /META/var/games /META/var/log \
+      /META/var/spool /var/ 2>/dev/null
+cp -a /META/var/lib/games\
+      /META/var/lib/nfs /META/var/lib/xkb /META/var/lib/isdn \
+      /META/var/lib/gdm /META/var/lib/pcmcia \
+      /META/var/lib/dhcp* \
+      /var/lib/ 2>/dev/null
+# Problematic directories in /var/lib (lots and lots of inodes)
+ln -s /META/var/lib/apt /META/var/lib/doc-base \
+      /META/var/lib/gnome\
+      /META/var/lib/scrollkeeper /META/var/lib/texmf \
+      /var/lib/ 2>/dev/null
+
+#progress: Primer tramo
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 140 21 FCD123 -d /dev/fb0
+fi
+
+# Debian-apt
+ln -s /META/var/cache/apt /var/cache/ 2>/dev/null
+ln -s /META/etc/skel /META/etc/nessus /etc/dhcpc/resolv.conf \
+      /etc/ 2>/dev/null
+ln -s /META/dev/* /dev/ 2>/dev/null
+# Index files can be HUGE, so better replace cache/man tree by links later
+# cp -a /META/var/cache/man /var/cache/ 2>/dev/null
+# Create links from CDROM for UNWRITABLE (remaining) files
+cp -aus /META/var/* /var/ 2> /dev/null
+cp -aus /META/etc/* /etc/ 2> /dev/null
+# Make SURE that these are files, not links!
+rm -rf /etc/passwd* /etc/shadow* /etc/group* /etc/gshadow*\
+       /etc/ppp /etc/isdn /etc/ssh /etc/ioctl.save \
+       /etc/inittab /etc/network /etc/sudoers \
+       /etc/init /etc/localtime /etc/dhcpc /etc/pnm2ppa.conf 2>> /dev/null
+cp -a /META/etc/passwd /META/etc/shadow /META/etc/group \
+      /META/etc/ppp /META/etc/isdn /META/etc/ssh \
+      /META/etc/inittab /META/etc/network /META/etc/sudoers \
+      /META/sbin/init /META/etc/dhcpc  /META/etc/gconf /etc/ 2>> /dev/null
+# Extremely important, init crashes on shutdown if this is only a link
+:> /etc/ioctl.save
+:> /etc/pnm2ppa.conf
+# Diet libc bug workaround
+cp -f /META/etc/localtime /etc/localtime
+
+#progress: Primer tramo
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 160 21 FCD123 -d /dev/fb0
+fi
+
+# Isolinux
+mkdir /isolinux 2>> /tmp/linuxrc.log
+cp -a /cdrom/isolinux/conf /isolinux/ 2>> /tmp/linuxrc.log
+ln -s /cdrom/isolinux/cdroot /isolinux/cdroot 2>> /tmp/linuxrc.log
+echo "SPLASH=${SPLASH}" >> /isolinux/conf/var.conf 2>> /tmp/linuxrc.log
+cp -a /META/etc/init.d/* /etc/init.d/ 2>> /tmp/linuxrc.log
+rm -rf /etc/init.d/rcS /etc/rc2.d/* /etc/rc0.d/* /etc/rc6.d/* \
+	/etc/X11/XF86Config* /etc/X11/X /etc/modules /etc/mtab \
+	/etc/hostname /etc/hosts 2>> /tmp/linuxrc.log
+ln -s /isolinux/cdroot/sbin/init.sh /etc/init.d/rcS 2>> /tmp/linuxrc.log
+ln -s /etc/init.d/halt /etc/rc0.d/S90halt 2>> /tmp/linuxrc.log
+ln -s /etc/init.d/reboot /etc/rc6.d/S90reboot 2>> /tmp/linuxrc.log
+ln -s /usr/bin/X11/XFree86 /etc/X11/X 2>> /tmp/linuxrc.log
+ln -s /proc/mounts /etc/mtab 2>> /tmp/linuxrc.log
+touch /etc/modules 2>> /tmp/linuxrc.log
+
+# Now tell kernel where the real modprobe lives
+echo "/sbin/modprobe" > /proc/sys/kernel/modprobe
+
+# progress: Segundo tramo
+if [ "$SPLASH" = "Y" ] ; then
+	progress 204 667 200 21 FCD123 -d /dev/fb0
+fi
+
+# Change root device from /dev/fd0 to /dev/ram0
+echo "0x100" > /proc/sys/kernel/real-root-dev
+
+# Give control to the init process.
+rm -f /linuxrc
+exit 0
+
+else
+case "${LANGUAGE}" in
+        es)
+		echo "${CRE}${RED}Lo siento, no puedo encontrar el sistema de ficheros.${NORMAL}"
+		echo "${RED}Le dejo ante un intérprete de comandos (muy limitado).${NORMAL}"
+		echo "${RED}Pulse "reset" para salir.${NORMAL}"
+		echo ""
+		echo "Comandos adicionales disponibles:"
+		echo "  cat        mount     umount"
+		echo "  insmod     rmmod     lsmod"
+		echo ""
+		;;
+	*)
+		echo "${CRE}${RED}Can't find META filesystem, sorry.${NORMAL}"
+		echo "${RED}Dropping you to a (very limited) shell.${NORMAL}"
+		echo "${RED}Press reset button to quit.${NORMAL}"
+		echo ""
+		echo "Additional builtin commands avaliable:"
+		echo "	cat        mount     umount"
+		echo "	insmod     rmmod     lsmod"
+		echo ""
+esac
+PS1="meta# "
+export PS1
+echo "6" > /proc/sys/kernel/printk
+# Allow signals
+trap 1 2 3 15
+exec /static/ash
+fi

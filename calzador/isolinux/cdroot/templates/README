@@ -1,0 +1,6 @@
+cdroot/templates/
+|-- README
+|-- XF86Config-4.in
+`-- XF86Config.in
+
+0 directories, 3 files

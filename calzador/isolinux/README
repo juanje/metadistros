@@ -1,0 +1,33 @@
+.
+|-- README
+|-- cdroot
+|   |-- README
+|   |-- sbin
+|   |   |-- README
+|   |   |-- busybox
+|   |   |-- dialog
+|   |   |-- eject
+|   |   |-- hw-detect.sh
+|   |   |-- init
+|   |   |-- install.sh
+|   |   |-- live.sh
+|   |   |-- mdetect
+|   |   |-- mkxf86config.sh
+|   |   |-- pump
+|   |   `-- x-detect.sh
+|   `-- templates
+|       |-- README
+|       |-- XF86Config-4.in
+|       `-- XF86Config.in
+|-- conf
+|   |-- README
+|   |-- lang.conf
+|   |-- q.conf
+|   `-- var.conf
+|-- greeting
+|-- initrd
+|   |-- README
+|   `-- linuxrc
+`-- isolinux.cfg
+
+5 directories, 25 files
