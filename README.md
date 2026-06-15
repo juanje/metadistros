@@ -9,4 +9,8 @@ Code from the Hispalinux Subversion repository
 This code was used **Gnome2-live** CD.
 **RELEASE:** 22-09-2003
 
+## Devloper mailing list archives
+
+[metadistros-dev](metadistros-dev/)
+
 Original URL for the project: http://metadistros.hispalinux.es/
