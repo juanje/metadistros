@@ -1,0 +1,151 @@
+[HowTo Metadistros] (2004)
+
+[Intro]
+Esta es una guía sencilla de cómo hacerse una distribución basada en el sistema Metadistros. No se va a profundizar en cómo funciona o el el sistema mísmo, sino en la manera actual más sencilla de hacerlo.
+Dado que el proyecto no esta acabado y anda en plena evolución, lo que aquí se diga es más que probable que cambie en unas semanas. Asi que éste documento seguira esa evolucion. Es por ello que le recomiendo que busque la versión más actual del mismo.
+
+[Coceptos previos]
+Es importante para entender lo que se va a hacer, tener claras algunas cosas. Lo principal, y en mi opinión lo más importante es no buscar la parte complicada. Es decir, el sistema es muy sencillo y eso es lo que hace que funcione. Pero es común entre aquellos que lo conocen por primera vez, que buscan algo más complejo y terminan por no entenderlo. Así que lo menor es que piense en la manera mas sencilla de hacer las cosas, que seguro qeu sera esa.
+En este sistema hay dos conceptos importantes, el Calzador y las Distribuciones personalizadas. Hay que recalcar que ambas cosas son independientes y estan fisicamente separadas.
+El Calzador es un conjunto de scripts que se encargan junto con el sistema "Isolinux" de arrancar el CD, detectar el Hardware de la máquina, configurarlo recoger la información del usuario o de la distro y levantar un sistema live con la Distribucion que se le indique, o instalarla.
+A este Calzador se le podrá encontrar en el CD, bajo el directorio isolinux, suponiendo que el CD este montado en /cdrom estará en:
+/cdrom/isolinux/
+
+La Distribución no es más que aquél sistema linux que se ha instalado y configurado (de la manera tradicional) pensando en las necesidades de un grupo de usuarios. Esto es, que se habrán instalado los programas que estos usuarios necesitarán, para su trabajo diario. Esta distribución que algun administrados o usuario mas o menos avanzado habrá instalado, se cogera y se meterá en el CD, para que el Calzador la instale o arranque "live". Pero es importante recalcar que seguira siendo una instalación normal, es decir, no habra que instalar nada extra para que se pueda hacer ésto. Sera una instalacion normal.
+
+[Requerimientos]
+Para crear una distribución basada en Metadistros, hoy en día hacen falta algunas cosas:
+- Un sistema linux con las herramientas típicas.
+- Espacio en el disco duro. Al menos 2 Gb para la distribucion que se instala y otros dos, para las imagenes que se crearán.
+- "mkisofs". Esta herramienta es fundamental para generar la imagenes del sistema y el CD arrancable.
+- Memoria ram o swap. O ambas cosas. Si se quiere hecer una imagen comprimida, para que un sistema granbde quepa en un CD, será necerario disponer de bastante memoria o en su defecto de bastante espacio swap (ya sea en partición o en archivo).[OPCIONAL]
+- Cloop. Si se quiere comprimir el sistema porque no cabe en el CD, se puede utilizar Cloop, que es un sistema de compresion de archivos loopback. Para ello será necesario instalarse las "cloop-utils".[OPCIONAL]
+- Alguna herremienta para grabar CD-Roms (cdrecord, etc) [OPCIONAL]
+
+	Y además hará falta tener una versión estable del Calzador. En esta url pueden bajarse una:
+ftp://ftp.softwarelibre.ulpgc.es/METADISTROS/calzador/isolinux.tar.bz2
+
+
+[Crear una distribución]
+Es probable que haya leído u oído algo del SBM (Sistema Base de Metadistros), que es con lo que se hacen las distribuciones de Metadistros, etc. Pues bien, ésto ahora no le interesa. Actualmente se está testeando este SBM y no esta disponible, así que olvídese de él, por ahora.
+Si lo que quiere es hacerse una distribución basada en Metadistros tiene tres formas de hacerlo:
+- Instalarse una Debian normal en una partición de su disco duro.
+- Coger uns sistema ya instalado (como por ejemplo el que usa normalmente en su ordenador)
+- Remasterizar una distribución que se base en este sistema, como es el caso de linex-live[1] o ltsp-live[2]. Remasterizar quiere decir modificar una ya hecha.
+
+Aunque el sistema viene a ser prácticamente el mismo, veamos cada caso en particular:
+
+	[Instalación desde 0]
+Lo unico que hace falta para hacer ésto es una partición libre de aproximadamente 2 Gb (depende del tamaño que quiera hacer su distribución). Ahora coge el sistema que prefiera para instalar (Cds, disquetes, red, etc) e instala lo que desee que haya en su distribución. Recuerde que no tiene que instalar nada en particular para que el sistema funciona, asi que podrá instalar lo que quiera o necesite.
+	[Sistema existente]
+Para esta opción necesitara tener un sistema linux ya instalado (preferiblemente Debian, pero no es necesario). Y seria conveniente disponer de una particion o poder montar por red algun disco, para guardar las imagenes que se hagan del sistema.
+	[Remasterizar una existente]
+Pues haría falta un CD o imagen de una distribución basada en Metadistros[1][2] y espacio en el disco suficiente para copiar esa distribucion descomprimida y guardar las imagenes que se hagan. Calculo que al menos 3Gb a ser posible algo más.
+También sería necesario tener las "cloop-utils", para copiarlo al disco o arrancar la distribución y una vez arrancada mountar el disco donde queramos copiar la distribución y hacer:
+# cp -a /META/* /mnt/particion_montada/directorio/
+
+De esta manera tendremos copiada la distribución descomprimida en el directorio "directorio" de nuestra partición en el disco.
+Una vez tengamos ésto, podremos instalar lo que queramos. Para hecerlo lo podemos hacer desde un chroot, es decir:
+# chroot /directorio
+[entramos en chroot]
+[instalamos lo que queramos]
+## exit -> [Salimos del chroot]
+
+[NOTA]: Por ahora, hasta que tengamos disponible el Kernel de metadistros, será necesario ponerle el que está en el Linex-live. Pero lo único que necesitaremos por ahora son los modulos, así que los cogeremos de aquí:
+ftp://ftp.softwarelibre.ulpgc.es/METADISTROS/calzador/modulos.tar.bz2
+	Y los descomprimiremos en el directorio /lib/modules/ de la distribución que hayamos creado.
+# wget ftp://ftp.softwarelibre.ulpgc.es/METADISTROS/calzador/modules.tar.bz2
+# tar -C /mnt/sources/lib/modules/ -jxf modulos.tar.bz2
+
+
+Bién, supongamos que tenemos el sistema que queremos que sea nuestra distribución en un directorio con alguno de estos sistemas. Para no liarnos y para no tener que cambiar nada en los scripts después, a este directorio le llamaremos:"/mnt/sources".
+Definamos la estructura de directorio que usaremos a partir de ahora:
+- /mnt/sources -> Es el directorio donde estará el sistema que queremos usar en la distro.
+- /mnt/master  -> Es el directorio en el que se guardará lo que será el contenido del CD. Éste contendrá dos subdirectorios:
+	- isolinux  -> Aqui irá el Calzador.
+	- META  -> Aquí ira la distribución.
+- /mnt/iso  -> Aquí se guardarán las distintas isos o imagenes, tanto de la distro, como del CD final.
+
+Pues ahora lo único que tendríamos que hacer es hacer una imagen de ese directorio. Eso no es otra cosa que crear un archivo con formato de CD, cuyo contenido sea el del directorio, esto se hace con "mkisofs".
+# mkisofs  -R -L -allow-multidot -l -o /mnt/iso/meta.iso -v /mnt/sources
+
+Después, si la imagen queda muy grande (> 650 Mb) la comprimiremos con cloop:
+# create_compressed_fs /mnt/iso/meta.iso  65536  > /mnt/master/META/META.cloop
+
+Después copiamos el Calzador que nos hemos bajado o que hamos cogido de otra distribución en /mnt/master:
+# wget ftp://ftp.softwarelibre.ulpgc.es/METADISTROS/calzador/isolinux.tar.bz2
+# tar -C /mnt/master/ -jxf isolinux.tar.bz2
+
+	o
+
+# cp -a /cdrom/isolinux /mnt/master
+
+
+[Configurar el Calzador]
+Una vez tenemos instalada y configurada la distribución. Y además hemos hecho la imagen y la hemos comprimido, ya casi está todo listo. De hecho ya podriamos crear el CD arrancable y funcionaria. Pero seguramente querremos personalizarla un poco. Ésto lo harémos en el Calzador (/mnt/master/isolinux/). Los archivos que podemos modificar para esta persanalización son:
+- /mnt/master/isolinux/greeting  -> Es el primer mensaje que aparece al arrancar. Se puede poner una imagen tambien.
+- /mnt/master/isolinux/conf/q.conf -> Aquí se configuran cuales van a ser las preguntas que se le harán al usuario al arrancar (nombre del usuario, clave del root, configuracion de la red...)
+- /mnt/master/isolinux/  -> Y aquí están los valores predeterminados para las preguntas, en caso de que no se hagan y otros datos interesantes( Nombre de la distribucion, nombre del equipo, usuario con el que se arranca..)
+
+[Crear el CD de la Distribución]
+Crear el Cd es lo más sencillo, si hemos puesto (o montado) el la distribución en /mnt/sources y hemos colocado y configurado el Calzador en /mnt/master/isolinux/, sólo tenemos que ejecutar el siguiente script y todo funcionará. Noten que el script ya hace lo de crear la imagen (mkisofs....) y comprimirla (create_compress_fs...), que se comentaba más arriba. Por lo que no tendrán que hacerlo ustedes a mano, sino simplemente ejecutar éste script. Eso si, revisenlo, por si necesitaran modificar alguna de las opciones, como por ejemplo el nombre de la distro o el dispositibo de la grabadora:
+<script>
+#/bin/bash
+
+# Directorios que se van a usar:
+ # directorio donde esta descoprimida la distro -> unos 2 Gb
+SOURCES=/mnt/sources
+ # directorio con el que se va a crear la iso final. Contiene el isolinux y META
+MASTER=/mnt/master
+ # directorio en donde se va a guardar la iso final, el cd para tostar  -> entre 600 y 650 Mb
+ISODIR=/mnt/iso
+
+# nombre de la metadistro
+META=meta
+
+# Primero crea una imagen ISO de la distro
+mkisofs  -R -L -allow-multidot -l -V "${META} iso9660 filesystem" -o $ISODIR/${META}_.iso -hide-rr-moved -v $SOURCES
+
+# Despues comprime la imagen y crea una imagen comprimida (META)
+create_compressed_fs $ISODIR/${META}_.iso  65536 > $MASTER/META/META.cloop
+
+# Borra la imagen ISO de la distro
+rm -rf $ISODIR/${META}_.iso
+
+# Ahora crea el la imagen ISO final con lo que haya en el directorio $MASTER.
+#Y crea el sector de arranque con el directorio "isolinux"
+/bin/cp -a isolinux.bin $MASTER/isolinux/
+mkisofs -l -r -J -V "${META}" -hide-rr-moved -v -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o $ISODIR/${META}.iso $MASTER
+
+
+# Borra la imagen comprimida de la distro
+#rm -fr $MASTER/META/META.cloop
+
+# Ahora se tuesta el CD
+ # Si es un regrabable (muy recomendable para hacer pruebas) se borra.
+#cdrecord -v dev=0,0 blank=fast
+
+ # Y ahora se tuesta. Se puede cambiar la velocidad de la grabacion, si tu grabadora te lo permite
+cdrecord -v speed=16 dev=0,0 $ISODIR/${META}.iso
+
+# Se borra la imagen ISO final
+#rm -fr $ISODIR/${META}_cd.iso
+
+</script>
+
+Fijense que antes de crear la iso final, copia el archivo "isolinux.bin" en /mnt/master/isolinux/, ésto lo hace porque alguna de las opciones del mkisofs corrompe el archivo cada vez que lo crea. Para evitar problemas, mantengan una copia de este archivo en el mismo directorio desde donde ejecutan el script y todo ira bien. Este archivo lo podran encontrar en "/usr/lib/syslinux/isolinux.bin" si tienen instalados el paquete "syslinux".
+
+
+	Pues ésto es todo lo que hace falta saber para crear una distribución basada en Metadistros. Para más información miren en las referencias.
+
+
+[Referencias]
+http://metadistros.hispalinux.es
+https://listas.hispalinux.es/mailman/listinfo/meta-distros
+http://www.hispalinux.es/w.php?Meta-distros
+ftp://ftp.softwarelibre.ulpgc.es/
+
+
+
+[1] ftp://ftp.softwarelibre.ulpgc.es/ISOS/METADISTROS/linex-live.iso
+[2] ftp://ftp.softwarelibre.ulpgc.es/ISOS/METADISTROS/ltsp-live.iso
